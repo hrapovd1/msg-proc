@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  web:
+    image: hrapovd/api_yamdb:1.0
+    depends_on:
+      - db
+    restart: always
+    env_file:
+      - ./.env
+    volumes:
+      - static_value:/app/static/
+      - media_value:/app/media/
+  nginx:
+    depends_on:
+      - web
+    image: nginx:1.21.3-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - static_value:/var/html/static/
+      - media_value:/var/html/media/
+  db:
+    image: postgres:13.3-alpine
+    volumes:
+      - data_volume:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+volumes:
+  static_value:
+  media_value:
+  data_volume:
