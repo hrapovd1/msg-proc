@@ -10,7 +10,6 @@ import (
 	"syscall"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/hrapovd1/msg-proc/internal/config"
 	"github.com/hrapovd1/msg-proc/internal/handlers"
@@ -24,9 +23,9 @@ var (
 )
 
 func main() {
-	logger := log.New(os.Stdout, "SERVER\t", log.Ldate|log.Ltime)
+	logger := log.New(os.Stdout, "APP\t", log.Ldate|log.Ltime)
 	// Чтение флагов и установка конфигурации сервера
-	serverConf, err := config.NewServerConf(config.GetServerFlags())
+	serverConf, err := config.NewAppConf(config.GetAppFlags())
 	if err != nil {
 		logger.Fatalln(err)
 	}
@@ -46,7 +45,7 @@ func main() {
 	logger.Printf("\tBuild commit: %s\n", buildCommit)
 	logger.Println("Server start on ", serverConf.ServerAddress)
 
-	handlerMetrics := handlers.NewMetricsHandler(*serverConf, logger)
+	handlerMetrics := handlers.NewHandler(*serverConf, logger)
 	handlerStorage := handlerMetrics.Storage.(types.Storager)
 	defer func() {
 		if err := handlerStorage.Close(); err != nil {
@@ -57,35 +56,18 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	defer stop()
 
-	wg := sync.WaitGroup{}
-
-	wg.Add(1)
-	go handlerStorage.Storing(ctx, &wg, logger, serverConf.StoreInterval, serverConf.IsRestore)
-
 	router := chi.NewRouter()
-	router.Use(handlerMetrics.CheckAgentNetMiddle)
-	router.Use(handlerMetrics.DecryptMiddle)
 	router.Use(handlerMetrics.GzipMiddle)
-	router.Get("/", handlerMetrics.GetAllHandler)
-	router.Get("/value/*", handlerMetrics.GetMetricHandler)
 	router.Get("/ping", handlerMetrics.PingDB)
-	router.Post("/value/", handlerMetrics.GetMetricJSONHandler)
-	router.Post("/updates/", handlerMetrics.UpdatesHandler)
-
-	update := chi.NewRouter()
-	update.Post("/gauge/*", handlerMetrics.GaugeHandler)
-	update.Post("/counter/*", handlerMetrics.CounterHandler)
-	update.Post("/", handlerMetrics.UpdateHandler)
-	update.Post("/*", handlers.NotImplementedHandler)
-
-	router.Mount("/update", update)
-	router.Mount("/debug", middleware.Profiler())
+	router.Post("/value/", handlerMetrics.SaveHandler)
+	router.Post("/*", handlers.NotImplementedHandler)
 
 	server := http.Server{
 		Addr:    serverConf.ServerAddress,
 		Handler: router,
 	}
 
+	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func(c context.Context, w *sync.WaitGroup, s *http.Server, l *log.Logger) {
 		defer wg.Done()
@@ -102,5 +84,5 @@ func main() {
 	}
 
 	wg.Wait()
-	logger.Println("server stoped gracefully")
+	logger.Println("app stopped gracefully")
 }
