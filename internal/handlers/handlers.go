@@ -11,7 +11,7 @@ import (
 
 	"github.com/hrapovd1/msg-proc/internal/config"
 	dbstorage "github.com/hrapovd1/msg-proc/internal/dbstrorage"
-	"github.com/hrapovd1/msg-proc/internal/storage"
+	"github.com/hrapovd1/msg-proc/internal/msgbus"
 	"github.com/hrapovd1/msg-proc/internal/types"
 	"github.com/hrapovd1/msg-proc/internal/usecase"
 )
@@ -19,24 +19,27 @@ import (
 // Handler тип обработчиков API
 // содержит конфигурацию и хранилище
 type Handler struct {
-	Storage types.Repository
-	Config  config.Config
-	logger  *log.Logger
+	Storage    types.Repository
+	MessageBus types.BusMessenger
+	Config     config.Config
+	logger     *log.Logger
 }
 
 // NewHandler возвращает обработчик API
 func NewHandler(conf config.Config, logger *log.Logger) *Handler {
 	h := &Handler{Config: conf, logger: logger}
-	// mem and db storage
+	// db storage init
 	db, err := dbstorage.NewDBStorage(
 		conf.DatabaseDSN,
 		logger,
-		storage.NewMemStorage(),
 	)
 	if err != nil {
 		logger.Fatal(err)
 	}
 	h.Storage = db
+	// message bus init
+	h.MessageBus = msgbus.NewKfkBus(conf, logger)
+
 	return h
 }
 

@@ -18,15 +18,13 @@ import (
 type DBStorage struct {
 	dbConnect *sql.DB
 	logger    *log.Logger
-	backStor  types.Repository
 	tableName string
 }
 
 // NewDBStorage возвращает тип DBStorage по полученному конфигу
-func NewDBStorage(dsn string, logger *log.Logger, backStor types.Repository) (*DBStorage, error) {
+func NewDBStorage(dsn string, logger *log.Logger) (*DBStorage, error) {
 	db := DBStorage{
 		logger:    logger,
-		backStor:  backStor,
 		tableName: "",
 	}
 	dbConnect, err := sql.Open("pgx", dsn)
@@ -36,7 +34,6 @@ func NewDBStorage(dsn string, logger *log.Logger, backStor types.Repository) (*D
 
 // Save сохраняет новое значение сообщения
 func (ds *DBStorage) Save(ctx context.Context, msgID, message string) {
-	ds.backStor.Save(ctx, msgID, message)
 	update := false
 	msg := types.MessageModel{
 		ID:      msgID,
@@ -52,7 +49,6 @@ func (ds *DBStorage) Save(ctx context.Context, msgID, message string) {
 
 // Update обновляет статус сообщения после обработки
 func (ds *DBStorage) Update(ctx context.Context, msgID, status string) {
-	ds.backStor.Update(ctx, msgID, status)
 	update := true
 	msg := types.MessageModel{
 		ID: msgID,
@@ -66,12 +62,6 @@ func (ds *DBStorage) Update(ctx context.Context, msgID, status string) {
 
 // Close закрывает подключение к БД, необходимо запускать в defer
 func (ds *DBStorage) Close() error {
-	stor := ds.backStor.(types.Storager)
-	defer func() {
-		if err := stor.Close(); err != nil {
-			ds.logger.Print(err)
-		}
-	}()
 	ds.logger.Print("call DBStorage.Close()")
 	return ds.dbConnect.Close()
 }

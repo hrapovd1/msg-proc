@@ -14,9 +14,11 @@ import (
 
 // environ содержит значения переменных среды
 type environ struct {
-	Address     string `env:"ADDRESS" envDefault:"localhost:8080"`
-	DatabaseDSN string `env:"DATABASE_DSN" envDefault:""`
-	ConfigFile  string `env:"CONFIG" envDefault:""`
+	Address      string `env:"ADDRESS" envDefault:"localhost:8080"`
+	DatabaseDSN  string `env:"DATABASE_DSN" envDefault:""`
+	KafkaBrokers string `env:"KAFKA_BROKERS" envDefault:"kafka:9092"`
+	KafkaTopic   string `env:"KAFKA_TOPIC" envDefault:"messages"`
+	ConfigFile   string `env:"CONFIG" envDefault:""`
 }
 
 // Config тип итоговой конфигурации приложения
@@ -59,6 +61,24 @@ func NewAppConf(flags Flags) (*Config, error) {
 	}
 	if flags.address == "" && cfg.tagsDefault["ADDRESS"] && fileCfg.valueExists("ServerAddress") {
 		cfg.ServerAddress = fileCfg.ServerAddress
+	}
+	// Определяю Kafka брокер(ы)
+	if flags.kafkaBrokers != "" && cfg.tagsDefault["KAFKA_BROKERS"] {
+		cfg.KafkaBrokers = flags.kafkaBrokers
+	} else {
+		cfg.KafkaBrokers = envs.KafkaBrokers
+	}
+	if flags.kafkaBrokers == "" && cfg.tagsDefault["KAFKA_BROKERS"] && fileCfg.valueExists("KafkaBrokers") {
+		cfg.KafkaBrokers = fileCfg.KafkaBrokers
+	}
+	// Определяю Kafka топик
+	if flags.kafkaTopic != "" && cfg.tagsDefault["KAFKA_TOPIC"] {
+		cfg.KafkaTopic = flags.kafkaTopic
+	} else {
+		cfg.KafkaTopic = envs.KafkaTopic
+	}
+	if flags.kafkaTopic == "" && cfg.tagsDefault["KAFKA_TOPIC"] && fileCfg.valueExists("KafkaTopic") {
+		cfg.KafkaTopic = fileCfg.KafkaTopic
 	}
 
 	return &cfg, err
@@ -128,16 +148,20 @@ func getRawJSONConfig(fName string) ([]byte, error) {
 
 // Flags содержит значения флагов переданные при запуске
 type Flags struct {
-	address    string
-	dbDSN      string
-	configFile string
+	address      string
+	dbDSN        string
+	kafkaBrokers string
+	kafkaTopic   string
+	configFile   string
 }
 
-// GetServerFlags - считывае флаги сервера
+// GetServerFlags - считывае флаги приложения
 func GetAppFlags() Flags {
 	flags := Flags{}
-	flag.StringVar(&flags.address, "a", "", "Address of server, for example: 0.0.0.0:8000")
+	flag.StringVar(&flags.address, "a", "", "Address of API, for example: 0.0.0.0:8000")
 	flag.StringVar(&flags.dbDSN, "d", "", "Database connect source, for example: postgres://username:password@localhost:5432/database_name")
+	flag.StringVar(&flags.kafkaBrokers, "kb", "", "Kafka brokers, example: kafka1:9092,kafka2:9092")
+	flag.StringVar(&flags.kafkaTopic, "kt", "", "Kafka topic, example message-topic")
 	flag.StringVar(&flags.configFile, "c", "", "(or -config) Path to config file in JSON format")
 	flag.StringVar(&flags.configFile, "config", "", "(or -c) Path to config file in JSON format")
 	flag.Parse()

@@ -53,8 +53,17 @@ func main() {
 		}
 	}()
 
+	handlerBusConsumer := handlerMessages.MessageBus.(types.MsgConsumer)
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	defer stop()
+
+	// Запускаю потребителя сообщений в фоне
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		handlerBusConsumer.Consume(ctx, handlerMessages.Storage)
+	}()
 
 	router := chi.NewRouter()
 	router.Use(handlerMessages.GzipMiddle)
@@ -67,10 +76,9 @@ func main() {
 		Handler: router,
 	}
 
-	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func(c context.Context, w *sync.WaitGroup, s *http.Server, l *log.Logger) {
-		defer wg.Done()
+		defer w.Done()
 		<-c.Done()
 		l.Println("got signal to stop")
 		if err := s.Shutdown(c); err != nil {

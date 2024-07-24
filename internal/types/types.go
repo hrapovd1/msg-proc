@@ -11,7 +11,7 @@ const DBtableName = "app_messages"
 // Message тип JSON формата сообщения
 type Message struct {
 	Msg string `json:"msg"` // сообщение
-	ID  string
+	ID  string `json:"-"`
 }
 
 // Repository основной интерфейс хранилища сообщений
@@ -24,6 +24,17 @@ type Repository interface {
 type Storager interface {
 	Close() error
 	Ping(ctx context.Context) bool
+}
+
+// BusMessenger интерфейс шины сообщений
+type BusMessenger interface {
+	Write(ctx context.Context, msg Message)
+	Read(ctx context.Context) Message
+}
+
+// MsgConsumer интерфейс потребителя сообщений из шины
+type MsgConsumer interface {
+	Consume(ctx context.Context, stor Repository)
 }
 
 // MessageModel модель таблицы для хранения сообщения в базе
