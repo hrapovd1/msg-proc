@@ -19,7 +19,7 @@ type environ struct {
 	ConfigFile  string `env:"CONFIG" envDefault:""`
 }
 
-// Config тип итоговой конфигурации агента или сервера
+// Config тип итоговой конфигурации приложения
 type Config struct {
 	ServerAddress string          `json:"address,omitempty"`
 	DatabaseDSN   string          `json:"database_dsn,omitempty"`

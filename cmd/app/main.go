@@ -17,36 +17,36 @@ import (
 )
 
 var (
-	buildVersion string
-	buildDate    string
-	buildCommit  string
+	BuildVersion string
+	BuildDate    string
+	BuildCommit  string
 )
 
 func main() {
 	logger := log.New(os.Stdout, "APP\t", log.Ldate|log.Ltime)
-	// Чтение флагов и установка конфигурации сервера
+	// Чтение флагов и установка конфигурации приложения
 	serverConf, err := config.NewAppConf(config.GetAppFlags())
 	if err != nil {
 		logger.Fatalln(err)
 	}
 
-	if buildVersion == "" {
-		buildVersion = "N/A"
+	if BuildVersion == "" {
+		BuildVersion = "N/A"
 	}
-	if buildDate == "" {
-		buildDate = "N/A"
+	if BuildDate == "" {
+		BuildDate = "N/A"
 	}
-	if buildCommit == "" {
-		buildCommit = "N/A"
+	if BuildCommit == "" {
+		BuildCommit = "N/A"
 	}
 
-	logger.Printf("\tBuild version: %s\n", buildVersion)
-	logger.Printf("\tBuild date: %s\n", buildDate)
-	logger.Printf("\tBuild commit: %s\n", buildCommit)
+	logger.Printf("\tBuild version: %s\n", BuildVersion)
+	logger.Printf("\tBuild date: %s\n", BuildDate)
+	logger.Printf("\tBuild commit: %s\n", BuildCommit)
 	logger.Println("Server start on ", serverConf.ServerAddress)
 
-	handlerMetrics := handlers.NewHandler(*serverConf, logger)
-	handlerStorage := handlerMetrics.Storage.(types.Storager)
+	handlerMessages := handlers.NewHandler(*serverConf, logger)
+	handlerStorage := handlerMessages.Storage.(types.Storager)
 	defer func() {
 		if err := handlerStorage.Close(); err != nil {
 			logger.Print(err)
@@ -57,9 +57,9 @@ func main() {
 	defer stop()
 
 	router := chi.NewRouter()
-	router.Use(handlerMetrics.GzipMiddle)
-	router.Get("/ping", handlerMetrics.PingDB)
-	router.Post("/value/", handlerMetrics.SaveHandler)
+	router.Use(handlerMessages.GzipMiddle)
+	router.Get("/ping", handlerMessages.PingDB)
+	router.Post("/value/", handlerMessages.SaveHandler)
 	router.Post("/*", handlers.NotImplementedHandler)
 
 	server := http.Server{

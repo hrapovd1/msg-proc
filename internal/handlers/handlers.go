@@ -28,17 +28,15 @@ type Handler struct {
 func NewHandler(conf config.Config, logger *log.Logger) *Handler {
 	h := &Handler{Config: conf, logger: logger}
 	// mem and db storage
-	if h.Config.DatabaseDSN != "" {
-		db, err := dbstorage.NewDBStorage(
-			conf.DatabaseDSN,
-			logger,
-			storage.NewMemStorage(),
-		)
-		if err != nil {
-			logger.Fatal(err)
-		}
-		h.Storage = db
+	db, err := dbstorage.NewDBStorage(
+		conf.DatabaseDSN,
+		logger,
+		storage.NewMemStorage(),
+	)
+	if err != nil {
+		logger.Fatal(err)
 	}
+	h.Storage = db
 	return h
 }
 
