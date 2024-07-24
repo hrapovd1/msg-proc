@@ -23,6 +23,8 @@ type environ struct {
 type Config struct {
 	ServerAddress string          `json:"address,omitempty"`
 	DatabaseDSN   string          `json:"database_dsn,omitempty"`
+	KafkaBrokers  string          `json:"kafka_brokers,omitempty"`
+	KafkaTopic    string          `json:"kafka_topic,omitempty"`
 	tagsDefault   map[string]bool `json:"-"`
 }
 

@@ -8,10 +8,10 @@ import (
 // Префикс в названиях таблиц базы
 const DBtableName = "app_messages"
 
-// Metric тип JSON формата метрики
+// Message тип JSON формата сообщения
 type Message struct {
-	Msg    string `json:"msg"` // сообщение
-	Status string
+	Msg string `json:"msg"` // сообщение
+	ID  string
 }
 
 // Repository основной интерфейс хранилища сообщений

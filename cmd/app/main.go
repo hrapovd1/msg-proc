@@ -25,7 +25,7 @@ var (
 func main() {
 	logger := log.New(os.Stdout, "APP\t", log.Ldate|log.Ltime)
 	// Чтение флагов и установка конфигурации приложения
-	serverConf, err := config.NewAppConf(config.GetAppFlags())
+	appConf, err := config.NewAppConf(config.GetAppFlags())
 	if err != nil {
 		logger.Fatalln(err)
 	}
@@ -43,9 +43,9 @@ func main() {
 	logger.Printf("\tBuild version: %s\n", BuildVersion)
 	logger.Printf("\tBuild date: %s\n", BuildDate)
 	logger.Printf("\tBuild commit: %s\n", BuildCommit)
-	logger.Println("Server start on ", serverConf.ServerAddress)
+	logger.Println("Server start on ", appConf.ServerAddress)
 
-	handlerMessages := handlers.NewHandler(*serverConf, logger)
+	handlerMessages := handlers.NewHandler(*appConf, logger)
 	handlerStorage := handlerMessages.Storage.(types.Storager)
 	defer func() {
 		if err := handlerStorage.Close(); err != nil {
@@ -63,7 +63,7 @@ func main() {
 	router.Post("/*", handlers.NotImplementedHandler)
 
 	server := http.Server{
-		Addr:    serverConf.ServerAddress,
+		Addr:    appConf.ServerAddress,
 		Handler: router,
 	}
 
