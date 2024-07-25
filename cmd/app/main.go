@@ -25,9 +25,9 @@ var (
 func main() {
 	logger := log.New(os.Stdout, "APP\t", log.Ldate|log.Ltime)
 	// Чтение флагов и установка конфигурации приложения
-	appConf, err := config.NewAppConf(config.GetAppFlags())
+	appConf, err := config.NewAppConf()
 	if err != nil {
-		logger.Fatalln(err)
+		logger.Fatalf("Error when init config: %v\n", err)
 	}
 
 	if BuildVersion == "" {
