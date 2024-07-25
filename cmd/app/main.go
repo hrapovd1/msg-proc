@@ -25,9 +25,11 @@ var (
 func main() {
 	logger := log.New(os.Stdout, "APP\t", log.Ldate|log.Ltime)
 	// Чтение флагов и установка конфигурации приложения
-	appConf, err := config.NewAppConf(config.GetAppFlags())
-	if err != nil {
-		logger.Fatalln(err)
+	appConf := config.Config{
+		ServerAddress: "localhost:8080",
+		DatabaseDSN:   "postgres://postgres:postgres@localhost:5432/postgres",
+		KafkaBrokers:  "localhost:29092",
+		KafkaTopic:    "messages",
 	}
 
 	if BuildVersion == "" {
@@ -45,7 +47,7 @@ func main() {
 	logger.Printf("\tBuild commit: %s\n", BuildCommit)
 	logger.Println("Server start on ", appConf.ServerAddress)
 
-	handlerMessages := handlers.NewHandler(*appConf, logger)
+	handlerMessages := handlers.NewHandler(appConf, logger)
 	handlerStorage := handlerMessages.Storage.(types.Storager)
 	defer func() {
 		if err := handlerStorage.Close(); err != nil {

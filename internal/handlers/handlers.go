@@ -63,17 +63,20 @@ func (h *Handler) SaveHandler(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	usecase.AddMessageID(&data)
 
-	// Write new metrics value
-	err = usecase.WriteJSONMessage(
+	// Write new message in DB
+	usecase.WriteJSONMessage(
 		ctx,
 		data,
 		h.Storage,
 	)
-	if err != nil {
-		http.Error(rw, err.Error(), http.StatusBadRequest)
-		return
-	}
+	// Send message to Bus
+	usecase.SendJSONMessage(
+		ctx,
+		data,
+		h.MessageBus,
+	)
 
 	rw.WriteHeader(http.StatusOK)
 }
