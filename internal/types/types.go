@@ -3,15 +3,25 @@ package types
 
 import (
 	"context"
+	"time"
 )
 
-// Префикс в названиях таблиц базы
-const DBtableName = "app_messages"
+const (
+	DBtableName   = "app_messages" // Имя таблицы в базе
+	InputMetric   = "totalInput"
+	ProcessMetric = "processed"
+	SyncPeriod    = time.Second * 30
+)
 
 // Message тип JSON формата сообщения
 type Message struct {
 	Msg string `json:"msg"` // сообщение
 	ID  string `json:"-"`
+}
+
+type Metrics struct {
+	Total     int64 `json:"total"`
+	Processed int64 `json:"processed"`
 }
 
 // Repository основной интерфейс хранилища сообщений
@@ -24,6 +34,7 @@ type Repository interface {
 type Storager interface {
 	Close() error
 	Ping(ctx context.Context) bool
+	GetCount(ctx context.Context, processed bool) int64
 }
 
 // BusMessenger интерфейс шины сообщений

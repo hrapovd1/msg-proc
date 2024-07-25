@@ -80,6 +80,27 @@ func (ds *DBStorage) Ping(ctx context.Context) bool {
 	return true
 }
 
+func (ds *DBStorage) GetCount(ctx context.Context, processed bool) int64 {
+	var count int64
+	db, err := gorm.Open(postgres.New(postgres.Config{Conn: ds.dbConnect}), &gorm.Config{})
+	if err != nil {
+		ds.logger.Printf("can't connect to db, when sync metric: %v\n", err)
+		return count
+	}
+	tableName := strings.ToLower(types.DBtableName)
+	select {
+	case <-ctx.Done():
+		return count
+	default:
+		if processed {
+			db.Table(tableName).Where("status = ?", "processed").Count(&count)
+		} else {
+			db.Table(tableName).Count(&count)
+		}
+		return count
+	}
+}
+
 // store внутренняя функция сохранения метрики в базу
 func (ds *DBStorage) store(ctx context.Context, message *types.MessageModel, isUpdate bool) error {
 	db, err := gorm.Open(postgres.New(postgres.Config{Conn: ds.dbConnect}), &gorm.Config{})

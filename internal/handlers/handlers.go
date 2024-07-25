@@ -11,6 +11,7 @@ import (
 
 	"github.com/hrapovd1/msg-proc/internal/config"
 	dbstorage "github.com/hrapovd1/msg-proc/internal/dbstrorage"
+	"github.com/hrapovd1/msg-proc/internal/metric"
 	"github.com/hrapovd1/msg-proc/internal/msgbus"
 	"github.com/hrapovd1/msg-proc/internal/types"
 	"github.com/hrapovd1/msg-proc/internal/usecase"
@@ -21,6 +22,7 @@ import (
 type Handler struct {
 	Storage    types.Repository
 	MessageBus types.BusMessenger
+	Metrics    metric.Metrics
 	Config     config.Config
 	logger     *log.Logger
 }
@@ -28,17 +30,21 @@ type Handler struct {
 // NewHandler возвращает обработчик API
 func NewHandler(conf config.Config, logger *log.Logger) *Handler {
 	h := &Handler{Config: conf, logger: logger}
+	var stor types.Repository
 	// db storage init
-	db, err := dbstorage.NewDBStorage(
+	stor, err := dbstorage.NewDBStorage(
 		conf.DatabaseDSN,
 		logger,
 	)
 	if err != nil {
 		logger.Fatal(err)
 	}
-	h.Storage = db
+	h.Storage = stor
+	// metrics storage init
+	metrics := *metric.NewMetrics(stor.(types.Storager))
+	h.Metrics = metrics
 	// message bus init
-	h.MessageBus = msgbus.NewKfkBus(conf, logger)
+	h.MessageBus = msgbus.NewKfkBus(conf, logger, &metrics)
 
 	return h
 }
@@ -77,6 +83,8 @@ func (h *Handler) SaveHandler(rw http.ResponseWriter, r *http.Request) {
 		data,
 		h.MessageBus,
 	)
+	// Count input message
+	h.Metrics.IncrementInput()
 
 	rw.WriteHeader(http.StatusOK)
 }
@@ -92,6 +100,27 @@ func (h *Handler) PingDB(rw http.ResponseWriter, r *http.Request) {
 	}
 	rw.Header().Set("Content-Type", "text/html")
 	rw.WriteHeader(http.StatusOK)
+}
+
+// Metrics GET обработчик API метрик
+func (h *Handler) Metric(rw http.ResponseWriter, r *http.Request) {
+	data := types.Metrics{
+		Total:     h.Metrics.Mem[types.InputMetric],
+		Processed: h.Metrics.Mem[types.ProcessMetric],
+	}
+	response, err := json.Marshal(data)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusOK)
+	_, err = rw.Write(response)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // NotImplementedHandler обработчик для ответа на не реализованные url

@@ -53,6 +53,8 @@ func main() {
 		}
 	}()
 
+	handlerMetrics := handlerMessages.Metrics
+
 	handlerBusConsumer := handlerMessages.MessageBus.(types.MsgConsumer)
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	defer stop()
@@ -65,10 +67,18 @@ func main() {
 		handlerBusConsumer.Consume(ctx, handlerMessages.Storage)
 	}()
 
+	// Запускаю синхронизацию метрик из базы
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		handlerMetrics.SyncWithDB(ctx)
+	}()
+
 	router := chi.NewRouter()
 	router.Use(handlerMessages.GzipMiddle)
 	router.Get("/ping", handlerMessages.PingDB)
-	router.Post("/value/", handlerMessages.SaveHandler)
+	router.Get("/metrics", handlerMessages.Metric)
+	router.Post("/api", handlerMessages.SaveHandler)
 	router.Post("/*", handlers.NotImplementedHandler)
 
 	server := http.Server{
