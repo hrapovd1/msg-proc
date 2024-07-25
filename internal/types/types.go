@@ -5,7 +5,7 @@ import (
 	"context"
 )
 
-// Префикс в названиях таблиц базы
+// Имя таблицы в базе
 const DBtableName = "app_messages"
 
 // Message тип JSON формата сообщения
