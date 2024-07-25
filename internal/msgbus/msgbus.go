@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/hrapovd1/msg-proc/internal/config"
+	"github.com/hrapovd1/msg-proc/internal/metric"
 	"github.com/hrapovd1/msg-proc/internal/types"
 	"github.com/segmentio/kafka-go"
 )
@@ -19,15 +20,17 @@ const (
 
 // KafkaBus реализует шину сообщений на Kafka
 type KafkaBus struct {
-	Reader *kafka.Reader
-	Writer *kafka.Writer
+	Reader  *kafka.Reader
+	Writer  *kafka.Writer
+	Metrics metric.Metrics
 }
 
 // NewKfkBus правильно инициализирует kafka reader/writer
-func NewKfkBus(appConf config.Config, logger *log.Logger) *KafkaBus {
+func NewKfkBus(appConf config.Config, logger *log.Logger, metrics *metric.Metrics) *KafkaBus {
 	kfkBus := KafkaBus{
-		Reader: newKafkaReader(appConf, logger),
-		Writer: newKafkaWriter(appConf, logger),
+		Reader:  newKafkaReader(appConf, logger),
+		Writer:  newKafkaWriter(appConf, logger),
+		Metrics: *metrics,
 	}
 	return &kfkBus
 }
@@ -94,6 +97,7 @@ func (kb *KafkaBus) Consume(ctx context.Context, stor types.Repository) {
 		default:
 			msg := kb.Read(ctx)
 			stor.Update(ctx, msg.ID, "processed")
+			kb.Metrics.IncrementProcessed()
 		}
 	}
 }
