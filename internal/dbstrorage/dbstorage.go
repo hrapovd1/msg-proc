@@ -51,7 +51,8 @@ func (ds *DBStorage) Save(ctx context.Context, msgID, message string) {
 func (ds *DBStorage) Update(ctx context.Context, msgID, status string) {
 	update := true
 	msg := types.MessageModel{
-		ID: msgID,
+		ID:     msgID,
+		Status: "processed",
 	}
 	if err := ds.store(ctx, &msg, update); err != nil {
 		if ds.logger != nil {
@@ -101,7 +102,8 @@ func (ds *DBStorage) store(ctx context.Context, message *types.MessageModel, isU
 		if !isUpdate {
 			db.Table(tableName).Create(message)
 		} else {
-			db.Table(tableName).Model(message).Update("status", message.Status)
+			ds.logger.Printf("update message %v\n", message)
+			db.Table(tableName).Model(message).Where("id = ?", message.ID).Update("status", message.Status)
 		}
 		return nil
 	}

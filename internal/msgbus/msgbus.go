@@ -76,9 +76,10 @@ func (kb *KafkaBus) Read(ctx context.Context) types.Message {
 			kb.Reader.Config().Logger.Printf("Error when read from kafka: %v\n", err)
 			return types.Message{}
 		}
+		kb.Reader.Config().Logger.Printf("read from kafka: Key = %v, Val = %v\n", string(msg.Key), string(msg.Value))
 		return types.Message{
-			Msg: string(msg.Key),
-			ID:  string(msg.Value),
+			Msg: string(msg.Value),
+			ID:  string(msg.Key),
 		}
 	}
 }

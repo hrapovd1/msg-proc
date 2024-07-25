@@ -15,8 +15,8 @@ import (
 // environ содержит значения переменных среды
 type environ struct {
 	Address      string `env:"ADDRESS" envDefault:"localhost:8080"`
-	DatabaseDSN  string `env:"DATABASE_DSN" envDefault:""`
-	KafkaBrokers string `env:"KAFKA_BROKERS" envDefault:"kafka:9092"`
+	DatabaseDSN  string `env:"DATABASE_DSN" envDefault:"postgres://postgres:postgres@localhost:5432/postgres"`
+	KafkaBrokers string `env:"KAFKA_BROKERS" envDefault:"localhost:29092"`
 	KafkaTopic   string `env:"KAFKA_TOPIC" envDefault:"messages"`
 	ConfigFile   string `env:"CONFIG" envDefault:""`
 }
