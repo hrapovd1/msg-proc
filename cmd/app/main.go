@@ -24,7 +24,7 @@ var (
 
 func main() {
 	logger := log.New(os.Stdout, "APP\t", log.Ldate|log.Ltime)
-	// Чтение флагов и установка конфигурации приложения
+	// Чтение переменных среды и установка конфигурации приложения
 	appConf, err := config.NewAppConf()
 	if err != nil {
 		logger.Fatalf("Error when init config: %v\n", err)
