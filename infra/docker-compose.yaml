@@ -39,9 +39,6 @@ services:
       - db
     build:
       context: ..
-      args:
-        - GIT_COMMIT=$(git log --oneline -1|awk '{print $1}')
-        - DATE=$(date +'%Y-%m-%d %H:%M')
     ports:
       - 8080:8080
     env_file:
