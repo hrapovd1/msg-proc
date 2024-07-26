@@ -3,13 +3,21 @@ package usecase
 
 import (
 	"context"
+	"time"
 
 	"github.com/hrapovd1/msg-proc/internal/types"
 )
 
+const timestampFormat = "20060102T150405.000"
+
+// GenMsgID генерирует hash сообщения как его ID
+func GenMsgID() string {
+	return time.Now().Format(timestampFormat)
+}
+
 // AddMessageID добавляет внутренний ID к полученному сообщению
 func AddMessageID(data *types.Message) {
-	messageID := GenMsgID(data.Msg)
+	messageID := GenMsgID()
 	data.ID = messageID
 }
 
