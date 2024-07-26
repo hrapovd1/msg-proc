@@ -1,18 +1,14 @@
 version: "3.9"
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.7.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - 22181:2181
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.7.0
     depends_on:
       - zookeeper
-    ports:
-      - 29092:29092
     hostname: kafka
     environment:
       KAFKA_BROKER_ID: 1
@@ -21,7 +17,7 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
   kafka-ui:
-    image: provectuslabs/kafka-ui
+    image: provectuslabs/kafka-ui:v0.7.2
     container_name: kafka-ui
     ports:
       - 8090:8080
@@ -32,10 +28,22 @@ services:
       - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
   db:
     image: postgres:16.3-alpine
-    ports:
-      - 5432:5432
     volumes:
       - data_volume:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+  app:
+    image: msg-proc
+    depends_on:
+      - kafka
+      - db
+    build:
+      context: ..
+      args:
+        - GIT_COMMIT=$(git log --oneline -1|awk '{print $1}')
+        - DATE=$(date +'%Y-%m-%d %H:%M')
+    ports:
+      - 8080:8080
     env_file:
       - ./.env
 volumes:
