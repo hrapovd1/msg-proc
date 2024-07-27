@@ -104,10 +104,7 @@ func (h *Handler) PingDB(rw http.ResponseWriter, r *http.Request) {
 
 // Metrics GET обработчик API метрик
 func (h *Handler) Metric(rw http.ResponseWriter, r *http.Request) {
-	data := types.Metrics{
-		Total:     h.Metrics.Mem[types.InputMetric],
-		Processed: h.Metrics.Mem[types.ProcessMetric],
-	}
+	data := h.Metrics.GetMetrics()
 	response, err := json.Marshal(data)
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)

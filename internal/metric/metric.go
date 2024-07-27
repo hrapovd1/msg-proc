@@ -39,14 +39,6 @@ func (m *Metrics) IncrementProcessed() {
 	m.Mem[types.ProcessMetric] = m.Mem[types.ProcessMetric] + 1
 }
 
-// sync приватная функция для синхронизации памяти из базы
-func (m *Metrics) sync(ctx context.Context) {
-	m.Mu.Lock()
-	defer m.Mu.Unlock()
-	m.Mem[types.InputMetric] = m.Ds.GetCount(ctx, false)
-	m.Mem[types.ProcessMetric] = m.Ds.GetCount(ctx, true)
-}
-
 // SyncWithDB синхронизирует счетчики в памяти с данными из базы
 func (m *Metrics) SyncWithDB(ctx context.Context) {
 	ticker := time.NewTicker(types.SyncPeriod)
@@ -60,4 +52,22 @@ func (m *Metrics) SyncWithDB(ctx context.Context) {
 			m.sync(ctx)
 		}
 	}
+}
+
+func (m *Metrics) GetMetrics() types.Metrics {
+	m.Mu.Lock()
+	defer m.Mu.Unlock()
+
+	return types.Metrics{
+		Total:     m.Mem[types.InputMetric],
+		Processed: m.Mem[types.ProcessMetric],
+	}
+}
+
+// sync приватная функция для синхронизации памяти из базы
+func (m *Metrics) sync(ctx context.Context) {
+	m.Mu.Lock()
+	defer m.Mu.Unlock()
+	m.Mem[types.InputMetric] = m.Ds.GetCount(ctx, false)
+	m.Mem[types.ProcessMetric] = m.Ds.GetCount(ctx, true)
 }

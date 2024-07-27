@@ -19,6 +19,7 @@ type Message struct {
 	ID  string `json:"-"`
 }
 
+// Metrics тип JSON формата для handler
 type Metrics struct {
 	Total     int64 `json:"total"`
 	Processed int64 `json:"processed"`
