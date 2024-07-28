@@ -78,6 +78,7 @@ func main() {
 
 	router := chi.NewRouter()
 	router.Use(handlerMessages.GzipMiddle)
+	router.Use(handlers.Authenticator)
 	router.Get("/ping", handlerMessages.PingDB)
 	router.Get("/metrics", handlerMessages.Metric)
 	router.Post("/api", handlerMessages.SaveHandler)

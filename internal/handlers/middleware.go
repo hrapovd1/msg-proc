@@ -4,9 +4,12 @@ package handlers
 
 import (
 	"compress/gzip"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/hrapovd1/msg-proc/internal/types"
 )
 
 // тип http ответа со сжатием
@@ -51,4 +54,28 @@ func (h *Handler) GzipMiddle(next http.Handler) http.Handler {
 		// передаём обработчику страницы переменную типа gzipWriter для вывода данных
 		next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
 	})
+}
+
+func Authenticator(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		// Get access token from request
+		authParam := r.Header.Get("Authorization")
+
+		// Check token to valid
+		err := checkAuth(authParam)
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		// Token is authenticated, pass it through
+		next.ServeHTTP(rw, r)
+	})
+}
+
+func checkAuth(token string) error {
+	if token == types.BearerToken {
+		return nil
+	}
+	return errors.New("Wrong login/password or token")
 }

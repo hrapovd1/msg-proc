@@ -7,10 +7,11 @@ import (
 )
 
 const (
-	DBtableName   = "app_messages" // Имя таблицы в базе
-	InputMetric   = "totalInput"
-	ProcessMetric = "processed"
-	SyncPeriod    = time.Second * 30
+	DBtableName   = "app_messages"   // Имя таблицы в базе
+	InputMetric   = "totalInput"     // Имя поля метрики полученных сообщений
+	ProcessMetric = "processed"      // Имя поля метрики обработанных сообщений
+	SyncPeriod    = time.Second * 30 // Период обращения к базе для получения метрик
+	BearerToken   = "sjdflks9r4.-Sdjf"
 )
 
 // Message тип JSON формата сообщения
