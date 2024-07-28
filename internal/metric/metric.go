@@ -47,7 +47,7 @@ func (m *Metrics) SyncWithDB(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			break
+			return
 		case <-ticker.C:
 			m.sync(ctx)
 		}

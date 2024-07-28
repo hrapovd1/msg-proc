@@ -64,6 +64,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		defer logger.Println("consumer are stopped")
 		handlerBusConsumer.Consume(ctx, handlerMessages.Storage)
 	}()
 
@@ -71,6 +72,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		defer logger.Println("DB sync are stopped")
 		handlerMetrics.SyncWithDB(ctx)
 	}()
 

@@ -123,7 +123,6 @@ func (ds *DBStorage) store(ctx context.Context, message *types.MessageModel, isU
 		if !isUpdate {
 			db.Table(tableName).Create(message)
 		} else {
-			ds.logger.Printf("update message %v\n", message)
 			db.Table(tableName).Model(message).Where("id = ?", message.ID).Update("status", message.Status)
 		}
 		return nil

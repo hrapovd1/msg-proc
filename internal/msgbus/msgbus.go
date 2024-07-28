@@ -79,7 +79,6 @@ func (kb *KafkaBus) Read(ctx context.Context) types.Message {
 			kb.Reader.Config().Logger.Printf("Error when read from kafka: %v\n", err)
 			return types.Message{}
 		}
-		kb.Reader.Config().Logger.Printf("read from kafka: Key = %v, Val = %v\n", string(msg.Key), string(msg.Value))
 		return types.Message{
 			Msg: string(msg.Value),
 			ID:  string(msg.Key),
@@ -90,10 +89,11 @@ func (kb *KafkaBus) Read(ctx context.Context) types.Message {
 // Consume реализует интерфейс MsgConsumer для непрерывного чтения
 // сообщений из шины
 func (kb *KafkaBus) Consume(ctx context.Context, stor types.Repository) {
+	defer kb.Reader.Close()
 	for {
 		select {
 		case <-ctx.Done():
-			break
+			return
 		default:
 			msg := kb.Read(ctx)
 			stor.Update(ctx, msg.ID, "processed")

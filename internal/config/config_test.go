@@ -3,28 +3,29 @@
 package config
 
 import (
-	"reflect"
+	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewAppConf(t *testing.T) {
-	tests := []struct {
-		name    string
-		want    *Config
-		wantErr bool
-	}{
-		// TODO: Add test cases.
+	envVars := map[string]string{
+		"ADDRESS":       "test:8888",
+		"DATABASE_DSN":  "postgres:5555",
+		"KAFKA_BROKERS": "kafka1,kafka2",
+		"KAFKA_TOPIC":   "topic1",
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewAppConf()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NewAppConf() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewAppConf() = %v, want %v", got, tt.want)
-			}
-		})
+	for k, v := range envVars {
+		os.Setenv(k, v)
 	}
+	t.Run("check config", func(t *testing.T) {
+		got, err := NewAppConf()
+		require.NoError(t, err)
+		assert.Equal(t, envVars["ADDRESS"], got.ServerAddress)
+		assert.Equal(t, envVars["DATABASE_DSN"], got.DatabaseDSN)
+		assert.Equal(t, envVars["KAFKA_BROKERS"], got.KafkaBrokers)
+		assert.Equal(t, envVars["KAFKA_TOPIC"], got.KafkaTopic)
+	})
 }
