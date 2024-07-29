@@ -31,21 +31,21 @@
 ```
 * **Отправка сообщения в приложение**
 ```
-curl --request POST \
-  --url http://IP_VM:8080/api \
+curl -i --request POST \
   --header 'Authorization: sjdflks9r4.-Sdjf' \
   --header 'Content-Type: application/json' \
-  --data '{"msg":"test message"}'
+  --data '{"msg":"test message"}' \
+  --url http://87.242.87.183:8080/api
 ```
 
-С целью защиты приложения от несанкционированных подключений я добавил токен аутентификации, который передается в заголовке **Authorization** , в приведенном примере данный заголовок указан с работающим токеном.
+С целью защиты приложения от несанкционированных подключений я добавил токен аутентификации, который передается в заголовке **Authorization** , в приведенном примере данный заголовок указан с **работающим токеном**.
 
 Просмотреть метрики статистики полученных и обработанных сообщений можно через **HTTP API uri /metrics**
 * **Статистика обработанных сообщений**
 ```
-curl --request GET \
-  --url http://IP_VM:8080/metrics \
-  --header 'Authorization: sjdflks9r4.-Sdjf'
+curl -i --request GET \
+  --header 'Authorization: sjdflks9r4.-Sdjf' \
+  --url http://87.242.87.183:8080/metrics 
 ```
 ответ будет в виде JSON сообщения вида (пример):
 ```
@@ -57,28 +57,9 @@ curl --request GET \
 
 ### Запуск локально в Docker
 
-Для работы приложения необходимо заполнить файл с переменными среды в каталоге infra проекта и назвать его **.env**
+В репозитории **уже** лежит конфигурационный файл **infra/.env** он необходим для запуска проекта в Docker.
 
-Файл **.env** необходимо заполнить следующими переменными:
-```
-POSTGRES_PASSWORD="postgres"
-ADDRESS=0.0.0.0:8080
-DATABASE_DSN="postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres"
-KAFKA_BROKERS="kafka:29092"
-KAFKA_TOPIC="messages"
-```
-Где:
-* POSTGRES_PASSWORD - пароль пользователя postgres необходимый для запуска контейнера
-БД postgresql
-* ADDRESS - адрес на котором приложение будет прослушивать подключения в формате ip:port
-в данном случае необходимо использовать 0.0.0.0:8080
-* DATABASE_DSN - строка подключения приложения к БД postgreSQL в формате "postgres://DB_USER:DB_PASSWORD@DB_HOST:DB_PORT/DB_NAME"
-* KAFKA_BROKERS - адреса kafka хостов через запятую (если их несколько в кластере) в формате "BROKER_HOST:BROKER_PORT,BROKER_HOST:BROKER_PORT,..."
-* KAFKA_TOPIC - имя kafka топика в который приложение будет посылать сообщения.
-
-В текущем решении подключение к kafka без аутентификации и без использования защиты подключения. Таблица в базе создается автоматически, топик в kafka так же создается автоматически.
-
-В итоге для запуска приложения в docker как есть необходимо:
+Для запуска приложения в docker как есть необходимо:
 * в консоли linux перейти в каталог infra, в каталоге приложения:
 ```
 cd msg-proc/infra
@@ -103,6 +84,27 @@ docker system prune -f
 ```
 После этого приложение будет доступно по адресу сервера/компьютера на котором выполняли команду запуска, а так же локально через loopback на порту **8080**.
 
+
+Файл **.env** содержит следующие переменные:
+```
+POSTGRES_PASSWORD="postgres"
+ADDRESS=0.0.0.0:8080
+DATABASE_DSN="postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres"
+KAFKA_BROKERS="kafka:29092"
+KAFKA_TOPIC="messages"
+```
+Где:
+* POSTGRES_PASSWORD - пароль пользователя postgres необходимый для запуска контейнера
+БД postgresql
+* ADDRESS - адрес на котором приложение будет прослушивать подключения в формате ip:port
+в данном случае необходимо использовать 0.0.0.0:8080
+* DATABASE_DSN - строка подключения приложения к БД postgreSQL в формате "postgres://DB_USER:DB_PASSWORD@DB_HOST:DB_PORT/DB_NAME"
+* KAFKA_BROKERS - адреса kafka хостов через запятую (если их несколько в кластере) в формате "BROKER_HOST:BROKER_PORT,BROKER_HOST:BROKER_PORT,..."
+* KAFKA_TOPIC - имя kafka топика в который приложение будет посылать сообщения.
+
+В текущем решении подключение к kafka без аутентификации и без использования защиты подключения. Таблица в базе создается автоматически, топик в kafka так же создается автоматически.
+
+
 ### Подключение к приложению локально
 
 Приложение принимает сообщения в следующем формате JSON по **HTTP API через uri /api**
@@ -112,18 +114,18 @@ docker system prune -f
 }
 ```
 ```
-curl --request POST \
-  --url http://localhost:8080/api \
+curl -i --request POST \
   --header 'Authorization: sjdflks9r4.-Sdjf' \
   --header 'Content-Type: application/json' \
-  --data '{"msg":"test message"}'
+  --data '{"msg":"test message"}' \
+  --url http://localhost:8080/api 
 ```
 
 Просмотреть метрики статистики полученных и обработанных сообщений можно через **HTTP API uri /metrics**
 ```
-curl --request GET \
-  --url http://localhost:8080/metrics \
-  --header 'Authorization: sjdflks9r4.-Sdjf'
+curl -i --request GET \
+  --header 'Authorization: sjdflks9r4.-Sdjf' \
+  --url http://localhost:8080/metrics
 ```
 ответ будет в виде JSON сообщения вида:
 ```
